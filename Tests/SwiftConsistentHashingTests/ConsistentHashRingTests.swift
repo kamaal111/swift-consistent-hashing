@@ -13,7 +13,7 @@ struct ConsistentHashRingTests {
     @Test
     func addNode() throws {
         let replicaAmount = 10
-        let hashRing = ConsistentHashRing(replicas: replicaAmount)
+        let hashRing = ConsistentHashRing<String>(replicas: replicaAmount)
 
         let inputNodes = [
             "mario",
@@ -30,7 +30,7 @@ struct ConsistentHashRingTests {
     @Test
     func removeNode() throws {
         let replicaAmount = 20
-        let hashRing = ConsistentHashRing(replicas: replicaAmount)
+        let hashRing = ConsistentHashRing<String>(replicas: replicaAmount)
 
         let inputNodes = [
             "kevin",
@@ -63,7 +63,7 @@ struct ConsistentHashRingTests {
     @Test
     func getNode() throws {
         let replicaAmount = 30
-        let hashRing = ConsistentHashRing(replicas: replicaAmount)
+        let hashRing = ConsistentHashRing<String>(replicas: replicaAmount)
 
         let inputNodes = [
             "kamaal",
@@ -74,13 +74,13 @@ struct ConsistentHashRingTests {
             hashRing.addNode(inputNode)
         }
 
-        var nodesFound = Set<String>()
-        for i in 0..<30 {
+        var nodesFound = [String: Int]()
+        for i in 0..<50 {
             let node = try #require(hashRing.getNode(at: "request_\(i)"))
             #expect(inputNodes.contains(node))
-            nodesFound.insert(node)
+            nodesFound[node] = (nodesFound[node] ?? 0) + 1
         }
 
-        #expect(nodesFound.sorted() == inputNodes.sorted())
+        #expect(nodesFound.keys.sorted() == inputNodes.sorted())
     }
 }

@@ -9,8 +9,7 @@ import CryptoKit
 import Foundation
 import Collections
 
-public class ConsistentHashRing {
-    public typealias Node = String
+public class ConsistentHashRing<Node: StringProtocol> {
     public typealias RingHash = String
 
     private(set) var ring: [RingHash: Node]
@@ -54,7 +53,7 @@ public class ConsistentHashRing {
 public enum ConsistentHashRingHashingAlgorithms {
     case sha256
 
-    func hash(_ message: String) -> String {
+    func hash(_ message: some StringProtocol) -> String {
         switch self {
         case .sha256:
             let data = message.data(using: .utf8)!
