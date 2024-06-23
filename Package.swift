@@ -9,8 +9,16 @@ let package = Package(
     products: [
         .library(name: "SwiftConsistentHashing", targets: ["SwiftConsistentHashing"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-collections.git", .upToNextMajor(from: "1.1.0"))
+    ],
     targets: [
-        .target(name: "SwiftConsistentHashing"),
+        .target(
+            name: "SwiftConsistentHashing",
+            dependencies: [
+                .product(name: "Collections", package: "swift-collections")
+            ]
+        ),
         .testTarget(name: "SwiftConsistentHashingTests", dependencies: ["SwiftConsistentHashing"]),
     ]
 )
