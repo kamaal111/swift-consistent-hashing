@@ -9,13 +9,13 @@ import CryptoKit
 import Foundation
 import Collections
 
-public class ConsistentHashRing<Node: StringProtocol> {
+public class ConsistentHashRing<Node: DataProtocol> {
     public typealias RingHash = String
 
     private(set) var ring: [RingHash: Node]
     private(set) var keys: OrderedSet<RingHash>
-    private var replicas: Int
-    private var hashingAlgorithm: ConsistentHashRingHashingAlgorithms
+    private let replicas: Int
+    private let hashingAlgorithm: ConsistentHashRingHashingAlgorithms
 
     public init(replicas: Int, hashingAlgorithm: ConsistentHashRingHashingAlgorithms = .sha256) {
         self.ring = [:]
@@ -25,8 +25,9 @@ public class ConsistentHashRing<Node: StringProtocol> {
     }
 
     public func addNode(_ node: Node) {
+        let nodeString = decodeNodeForKey(node)
         for i in 0..<replicas {
-            let key = hashingAlgorithm.hash("\(node)_\(i)")
+            let key = hashingAlgorithm.hash(encodeKey("\(nodeString)_\(i)"))
             ring[key] = node
             keys.append(key)
         }
@@ -34,8 +35,9 @@ public class ConsistentHashRing<Node: StringProtocol> {
     }
 
     public func removeNode(_ node: Node) {
+        let nodeString = decodeNodeForKey(node)
         for i in 0..<replicas {
-            let key = hashingAlgorithm.hash("\(node)_\(i)")
+            let key = hashingAlgorithm.hash(encodeKey("\(nodeString)_\(i)"))
             ring.removeValue(forKey: key)
             keys.remove(key)
         }
@@ -44,20 +46,27 @@ public class ConsistentHashRing<Node: StringProtocol> {
     public func getNode(at key: RingHash) -> Node? {
         guard !keys.isEmpty else { return nil }
 
-        let hashedKey = hashingAlgorithm.hash(key)
+        let hashedKey = hashingAlgorithm.hash(encodeKey(key))
         let matchingKey = keys.first(where: { key in key >= hashedKey }) ?? keys.first!
         return ring[matchingKey]
+    }
+
+    private func encodeKey(_ key: RingHash) -> some DataProtocol {
+        key.data(using: .utf8)!
+    }
+
+    private func decodeNodeForKey(_ node: Node) -> String {
+        String(decoding: node, as: UTF8.self)
     }
 }
 
 public enum ConsistentHashRingHashingAlgorithms {
     case sha256
 
-    func hash(_ message: some StringProtocol) -> String {
+    func hash(_ data: some DataProtocol) -> String {
         switch self {
         case .sha256:
-            let data = message.data(using: .utf8)!
-            return SHA256
+            SHA256
                 .hash(data: data)
                 .compactMap({ byte in String(format: "%02x", byte) })
                 .joined()
